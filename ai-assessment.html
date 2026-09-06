@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>RepairIQ - AI Product Assessment</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #2563eb;
+            color: white;
+            padding: 18px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 28px;
+        }
+
+        header a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            padding: 35px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+        }
+
+        h2 {
+            text-align: center;
+            color: #222;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 30px;
+            padding: 14px;
+            border: none;
+            border-radius: 7px;
+            background: #2563eb;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button:disabled {
+            background: #93b4f5;
+            cursor: not-allowed;
+        }
+
+        #result {
+            display: none;
+            margin-top: 35px;
+            padding: 30px;
+            border-radius: 15px;
+            background: #f8fafc;
+            border: 1px solid #dbeafe;
+        }
+
+        .result-title {
+            text-align: center;
+            color: #1e3a8a;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .score-box {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .score-label {
+            color: #666;
+            font-size: 16px;
+        }
+
+        #score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #2563eb;
+            margin: 8px 0;
+        }
+
+        #rating {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .info-box {
+            background: white;
+            padding: 18px;
+            border-radius: 10px;
+            margin-top: 12px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .info-box strong {
+            color: #333;
+        }
+
+        #recommendation {
+            font-size: 19px;
+            font-weight: bold;
+            margin-top: 7px;
+        }
+
+        #explanation {
+            color: #555;
+            line-height: 1.6;
+            margin-top: 7px;
+        }
+
+        #saveMessage {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .back {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .back a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>RepairIQ</h1>
+    <a href="dashboard.html">← Dashboard</a>
+</header>
+
+<div class="container">
+
+    <h2>AI Product Assessment</h2>
+
+    <p class="description">
+        Analyze your product condition and determine whether repair is recommended.
+    </p>
+
+    <form id="assessmentForm">
+
+        <label for="productName">Product Name</label>
+
+        <input
+            type="text"
+            id="productName"
+            placeholder="Enter product name"
+            required
+        >
+
+        <label for="productAge">Product Age</label>
+
+        <select id="productAge" required>
+            <option value="">Select product age</option>
+            <option value="new">Less than 2 years</option>
+            <option value="medium">2 - 5 years</option>
+            <option value="old">More than 5 years</option>
+        </select>
+
+        <label for="problem">Problem Description</label>
+
+        <textarea
+            id="problem"
+            placeholder="Describe the problem with the product"
+            required
+        ></textarea>
+
+        <label for="repairCost">Estimated Repair Cost</label>
+
+        <input
+            type="number"
+            id="repairCost"
+            placeholder="Enter estimated repair cost"
+            min="0"
+            required
+        >
+
+        <button type="submit" id="analyzeButton">
+            Analyze Product
+        </button>
+
+    </form>
+
+    <div id="result">
+
+        <div class="result-title">
+            🧠 AI Repairability Assessment
+        </div>
+
+        <div class="score-box">
+
+            <div class="score-label">
+                Repairability Score
+            </div>
+
+            <div id="score">
+                0/100
+            </div>
+
+            <div id="rating">
+                -
+            </div>
+
+        </div>
+
+        <div class="info-box">
+
+            <strong>🔧 Recommendation</strong>
+
+            <div id="recommendation">
+                -
+            </div>
+
+        </div>
+
+        <div class="info-box">
+
+            <strong>💰 Estimated Repair Cost</strong>
+
+            <div id="costResult">
+                -
+            </div>
+
+        </div>
+
+        <div class="info-box">
+
+            <strong>📋 Problem Identified</strong>
+
+            <div id="problemResult">
+                -
+            </div>
+
+        </div>
+
+        <div class="info-box">
+
+            <strong>💡 AI Assessment</strong>
+
+            <div id="explanation">
+                -
+            </div>
+
+        </div>
+
+        <div id="saveMessage"></div>
+
+    </div>
+
+    <div class="back">
+        <a href="dashboard.html">← Back to Dashboard</a>
+    </div>
+
+</div>
+
+<script>
+
+document.getElementById("assessmentForm").addEventListener(
+    "submit",
+    function(event) {
+
+        event.preventDefault();
+
+        const productName =
+            document.getElementById("productName").value.trim();
+
+        const productAge =
+            document.getElementById("productAge").value;
+
+        const problem =
+            document.getElementById("problem").value.trim();
+
+        const repairCost =
+            Number(document.getElementById("repairCost").value);
+
+        let ageScore;
+        let costScore;
+
+        /*
+         * Product age score
+         */
+
+        if (productAge === "new") {
+            ageScore = 3;
+        } else if (productAge === "medium") {
+            ageScore = 2;
+        } else {
+            ageScore = 1;
+        }
+
+        /*
+         * Repair cost score
+         */
+
+        if (repairCost <= 1000) {
+            costScore = 3;
+        } else if (repairCost <= 5000) {
+            costScore = 2;
+        } else {
+            costScore = 1;
+        }
+
+        /*
+         * Problem severity estimation
+         */
+
+        const problemText =
+            problem.toLowerCase();
+
+        let problemScore;
+
+        if (
+            problemText.includes("screen") ||
+            problemText.includes("display") ||
+            problemText.includes("motherboard") ||
+            problemText.includes("water damage") ||
+            problemText.includes("burn")
+        ) {
+            problemScore = 1;
+        } else if (
+            problemText.includes("battery") ||
+            problemText.includes("charging") ||
+            problemText.includes("fan") ||
+            problemText.includes("noise") ||
+            problemText.includes("keyboard")
+        ) {
+            problemScore = 2;
+        } else {
+            problemScore = 3;
+        }
+
+        /*
+         * AI-style repairability score
+         */
+
+        const totalScore =
+            ageScore + costScore + problemScore;
+
+        const repairabilityScore =
+            Math.round((totalScore / 9) * 100);
+
+        let rating;
+        let recommendation;
+        let explanation;
+
+        /*
+         * Rating and recommendation
+         */
+
+        if (repairabilityScore >= 75) {
+
+            rating =
+                "🟢 Highly Repairable";
+
+            recommendation =
+                "✅ Repair Recommended";
+
+            explanation =
+                "The product appears relatively suitable for repair. " +
+                "Its age and estimated repair cost indicate that repairing " +
+                "the product may be more cost-effective than replacing it.";
+
+        } else if (repairabilityScore >= 50) {
+
+            rating =
+                "🟡 Moderately Repairable";
+
+            recommendation =
+                "⚠️ Repair Can Be Considered";
+
+            explanation =
+                "The product has moderate repairability. " +
+                "Repair may be worthwhile depending on the availability " +
+                "of spare parts and the final repair cost.";
+
+        } else {
+
+            rating =
+                "🔴 Difficult to Repair";
+
+            recommendation =
+                "❌ Replacement May Be Better";
+
+            explanation =
+                "The product may be difficult or expensive to repair. " +
+                "If the repair cost is high compared with the product's " +
+                "value, replacement may be a better option.";
+        }
+
+        /*
+         * Display result
+         */
+
+        document.getElementById("score").innerHTML =
+            repairabilityScore + "/100";
+
+        document.getElementById("rating").innerHTML =
+            rating;
+
+        document.getElementById("recommendation").innerHTML =
+            recommendation;
+
+        document.getElementById("costResult").innerHTML =
+            "₹" + repairCost.toLocaleString("en-IN");
+
+        document.getElementById("problemResult").innerHTML =
+            problem;
+
+        document.getElementById("explanation").innerHTML =
+            explanation;
+
+        document.getElementById("result").style.display =
+            "block";
+
+        /*
+         * Prepare AI assessment data for MongoDB
+         */
+
+        const assessmentData = {
+
+            productName: productName,
+
+            productAge:
+                productAge === "new"
+                    ? 1
+                    : productAge === "medium"
+                        ? 3
+                        : 6,
+
+            problemDescription: problem,
+
+            estimatedRepairCost: repairCost,
+
+            repairabilityScore: repairabilityScore,
+
+            rating: rating,
+
+            recommendation: recommendation,
+
+            explanation: explanation
+        };
+
+        const button =
+            document.getElementById("analyzeButton");
+
+        button.disabled = true;
+
+        button.innerHTML =
+            "Saving Assessment...";
+
+        /*
+         * Send assessment to Spring Boot
+         * Spring Boot saves it to MongoDB Atlas
+         */
+
+        fetch(
+            "http://localhost:8080/api/ai-assessments",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body:
+                    JSON.stringify(assessmentData)
+            }
+        )
+        .then(function(response) {
+
+            if (!response.ok) {
+                throw new Error(
+                    "Could not save AI assessment"
+                );
+            }
+
+            return response.json();
+
+        })
+        .then(function(data) {
+
+            document.getElementById(
+                "saveMessage"
+            ).innerHTML =
+                "✅ AI Assessment saved successfully.";
+
+            document.getElementById(
+                "saveMessage"
+            ).style.color =
+                "green";
+
+            button.disabled = false;
+
+            button.innerHTML =
+                "Analyze Product";
+
+        })
+        .catch(function(error) {
+
+            console.error(error);
+
+            document.getElementById(
+                "saveMessage"
+            ).innerHTML =
+                "❌ AI Assessment could not be saved.";
+
+            document.getElementById(
+                "saveMessage"
+            ).style.color =
+                "red";
+
+            button.disabled = false;
+
+            button.innerHTML =
+                "Analyze Product";
+        });
+
+    }
+);
+
+</script>
+
+</body>
+</html>

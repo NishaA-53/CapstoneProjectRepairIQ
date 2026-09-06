@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RepairIQ - Warranty Check</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f7fa;
+            color: #222;
+        }
+
+        header {
+            background: white;
+            padding: 20px 8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .back {
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 60px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-top: 18px;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 30px;
+            padding: 14px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button:disabled {
+            background: #93c5fd;
+            cursor: not-allowed;
+        }
+
+        #result {
+            display: none;
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            background: #eef6ff;
+        }
+
+        #result h2 {
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+
+        #resultText {
+            line-height: 1.6;
+        }
+
+        .error {
+            background: #fff0f0 !important;
+        }
+
+        .error h2 {
+            color: #dc2626 !important;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">RepairIQ</div>
+
+    <a href="dashboard.html" class="back">← Dashboard</a>
+</header>
+
+<div class="container">
+
+    <h1>Warranty Check</h1>
+
+    <p class="description">
+        Enter your product details to check warranty eligibility.
+    </p>
+
+    <form onsubmit="checkWarranty(event)">
+
+        <label>Product Name</label>
+        <input type="text" id="product" placeholder="Example: Samsung TV" required>
+
+        <label>Product Serial Number</label>
+        <input type="text" id="serial" placeholder="Enter serial number" required>
+
+        <label>Purchase Date</label>
+        <input type="date" id="purchaseDate" required>
+
+        <label>Warranty Period</label>
+        <select id="warrantyPeriod" required>
+            <option value="">Select warranty period</option>
+            <option value="1">1 Year</option>
+            <option value="2">2 Years</option>
+            <option value="3">3 Years</option>
+        </select>
+
+        <button type="submit" id="checkButton">
+            Check Warranty
+        </button>
+
+    </form>
+
+    <div id="result">
+        <h2>Warranty Result</h2>
+        <p id="resultText"></p>
+    </div>
+
+</div>
+
+<script>
+
+async function checkWarranty(event) {
+
+    event.preventDefault();
+
+    const productName =
+        document.getElementById("product").value;
+
+    const serialNumber =
+        document.getElementById("serial").value;
+
+    const purchaseDateValue =
+        document.getElementById("purchaseDate").value;
+
+    const warrantyYears =
+        parseInt(document.getElementById("warrantyPeriod").value);
+
+    const result =
+        document.getElementById("result");
+
+    const resultText =
+        document.getElementById("resultText");
+
+    const checkButton =
+        document.getElementById("checkButton");
+
+
+    // Calculate warranty expiry date
+
+    const purchaseDate =
+        new Date(purchaseDateValue + "T00:00:00");
+
+    const expiryDate =
+        new Date(purchaseDate);
+
+    expiryDate.setFullYear(
+        expiryDate.getFullYear() + warrantyYears
+    );
+
+
+    // Check warranty status
+
+    const today = new Date();
+
+    const underWarranty =
+        today <= expiryDate;
+
+
+    // Format expiry date
+
+    const expiryDateText =
+        expiryDate.toLocaleDateString();
+
+
+    // Show loading state
+
+    checkButton.disabled = true;
+    checkButton.innerText = "Checking...";
+
+    result.style.display = "block";
+    result.classList.remove("error");
+
+    resultText.innerHTML =
+        "Checking warranty with RepairIQ backend...";
+
+
+    // Send data to Spring Boot backend
+
+    try {
+
+        const response = await fetch(
+            "http://localhost:8080/api/warranty",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    productName: productName,
+
+                    serialNumber: serialNumber,
+
+                    purchaseDate: purchaseDateValue,
+
+                    warrantyExpiry: expiryDateText,
+
+                    underWarranty: underWarranty
+
+                })
+            }
+        );
+
+
+        // Check backend response
+
+        if (!response.ok) {
+            throw new Error(
+                "Backend returned error: " + response.status
+            );
+        }
+
+
+        const savedWarranty =
+            await response.json();
+
+
+        // Display result
+
+        if (savedWarranty.underWarranty) {
+
+            resultText.innerHTML =
+                "✅ Your product is <strong>under warranty</strong>." +
+                "<br><br>" +
+                "Product: <strong>" +
+                savedWarranty.productName +
+                "</strong>" +
+                "<br>" +
+                "Serial Number: <strong>" +
+                savedWarranty.serialNumber +
+                "</strong>" +
+                "<br>" +
+                "Warranty expiry date: <strong>" +
+                savedWarranty.warrantyExpiry +
+                "</strong>" +
+                "<br><br>" +
+                "Warranty information has been saved successfully.";
+
+        } else {
+
+            resultText.innerHTML =
+                "❌ Your product warranty has <strong>expired</strong>." +
+                "<br><br>" +
+                "Product: <strong>" +
+                savedWarranty.productName +
+                "</strong>" +
+                "<br>" +
+                "Serial Number: <strong>" +
+                savedWarranty.serialNumber +
+                "</strong>" +
+                "<br>" +
+                "Warranty expiry date: <strong>" +
+                savedWarranty.warrantyExpiry +
+                "</strong>" +
+                "<br><br>" +
+                "Warranty information has been saved successfully.";
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        result.classList.add("error");
+
+        resultText.innerHTML =
+            "❌ Unable to connect to the RepairIQ backend." +
+            "<br><br>" +
+            "Please make sure Spring Boot is running on port 8080.";
+
+    }
+
+
+    // Restore button
+
+    checkButton.disabled = false;
+    checkButton.innerText = "Check Warranty";
+}
+
+</script>
+
+</body>
+</html>
