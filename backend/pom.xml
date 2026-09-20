@@ -19,7 +19,7 @@
     <description>RepairIQ AI Powered Product Repairability Platform</description>
 
     <properties>
-        <java.version>26</java.version>
+        <java.version>21</java.version>
     </properties>
 
     <dependencies>
