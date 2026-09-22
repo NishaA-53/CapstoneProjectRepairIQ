@@ -210,7 +210,7 @@ function loginUser(event) {
     loginButton.disabled = true;
     loginButton.innerHTML = "Sending OTP...";
 
-    fetch("http://localhost:8080/api/users/login", {
+    fetch("https://repairiq-backend.onrender.com/api/users/login", {
 
         method: "POST",
 
@@ -296,7 +296,7 @@ function verifyOtp() {
     verifyButton.disabled = true;
     verifyButton.innerHTML = "Verifying...";
 
-    fetch("http://localhost:8080/api/users/verify-otp", {
+    fetch("https://repairiq-backend.onrender.com/api/users/verify-otp", {
 
         method: "POST",
 
