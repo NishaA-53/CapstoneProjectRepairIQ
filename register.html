@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,10 +20,12 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
 
         .register-container {
             width: 420px;
+            max-width: 100%;
             background: white;
             padding: 40px;
             border-radius: 15px;
@@ -79,7 +82,12 @@
             background: #1d4ed8;
         }
 
-        .login {
+        button:disabled {
+            background: #93b4f5;
+            cursor: wait;
+        }
+
+        .login, .home {
             text-align: center;
             margin-top: 20px;
         }
@@ -88,11 +96,6 @@
             color: #2563eb;
             text-decoration: none;
             font-weight: bold;
-        }
-
-        .home {
-            text-align: center;
-            margin-top: 15px;
         }
 
         .home a {
@@ -104,63 +107,40 @@
             text-align: center;
             margin-top: 15px;
             font-weight: bold;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
         }
     </style>
 </head>
 
 <body>
-
 <div class="register-container">
-
     <div class="logo">RepairIQ</div>
-
     <h2>Create Account</h2>
 
-    <form onsubmit="registerUser(event)">
-
+    <form id="registerForm" onsubmit="registerUser(event)">
         <label for="name">Full Name</label>
-
-        <input
-            type="text"
-            id="name"
-            placeholder="Enter your full name"
-            required
-        >
+        <input type="text" id="name"
+               placeholder="Enter your full name" required>
 
         <label for="email">Email</label>
-
-        <input
-            type="email"
-            id="email"
-            placeholder="Enter your email"
-            required
-        >
+        <input type="email" id="email"
+               placeholder="Enter your email" required>
 
         <label for="password">Password</label>
-
-        <input
-            type="password"
-            id="password"
-            placeholder="Create a password"
-            required
-        >
+        <input type="password" id="password"
+               placeholder="Create a password" required>
 
         <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword"
+               placeholder="Confirm your password" required>
 
-        <input
-            type="password"
-            id="confirmPassword"
-            placeholder="Confirm your password"
-            required
-        >
-
-        <button type="submit">
+        <button type="submit" id="registerButton">
             Create Account
         </button>
-
     </form>
 
-    <div id="message"></div>
+    <div id="message" role="status" aria-live="polite"></div>
 
     <div class="login">
         Already have an account?
@@ -170,85 +150,75 @@
     <div class="home">
         <a href="index.html">← Back to Home</a>
     </div>
-
 </div>
 
 <script>
+const API_URL = "http://localhost:8080/api/users/register";
 
-function registerUser(event) {
-
+async function registerUser(event) {
     event.preventDefault();
 
-    let name = document.getElementById("name").value;
-    let email = document.getElementById("email").value;
-    let password = document.getElementById("password").value;
-    let confirmPassword = document.getElementById("confirmPassword").value;
-
-    let message = document.getElementById("message");
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+    const message = document.getElementById("message");
+    const button = document.getElementById("registerButton");
 
     if (password !== confirmPassword) {
-
-        message.innerHTML = "❌ Passwords do not match!";
+        message.textContent = "Passwords do not match.";
         message.style.color = "red";
-
         return;
     }
 
-    message.innerHTML = "Creating account...";
+    button.disabled = true;
+    button.textContent = "Creating Account...";
+    message.textContent = "Connecting to RepairIQ backend...";
     message.style.color = "#2563eb";
 
-    fetch("https://repairiq-backend.onrender.com/api/users/register", {
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: name,
+                email: email,
+                password: password
+            })
+        });
 
-        method: "POST",
+        const data = (await response.text()).trim();
 
-        headers: {
-            "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify({
-            name: name,
-            email: email,
-            password: password
-        })
-
-    })
-
-    .then(response => response.text())
-
-    .then(data => {
-
-        if (data === "Registration successful") {
-
-            message.innerHTML = "✅ Registration successful!";
-            message.style.color = "green";
-
-            setTimeout(function() {
-                window.location.href = "login.html";
-            }, 1000);
-
-        } else {
-
-            message.innerHTML = "❌ " + data;
-            message.style.color = "red";
-
+        if (!response.ok) {
+            throw new Error("Server error " + response.status + ": " + data);
         }
 
-    })
+        if (data === "Registration successful") {
+            message.textContent = "Registration successful! Opening login...";
+            message.style.color = "green";
 
-    .catch(error => {
+            document.getElementById("registerForm").reset();
 
-        message.innerHTML =
-            "❌ Cannot connect to backend.";
-
+            setTimeout(() => {
+                window.location.href = "login.html";
+            }, 1200);
+        } else {
+            message.textContent = data || "Registration failed.";
+            message.style.color = "red";
+        }
+    } catch (error) {
+        console.error("Registration error:", error);
+        message.textContent =
+            "Could not connect to the local backend. " + error.message;
         message.style.color = "red";
-
-        console.error(error);
-
-    });
-
+    } finally {
+        button.disabled = false;
+        button.textContent = "Create Account";
+    }
 }
-
 </script>
-
 </body>
 </html>
+

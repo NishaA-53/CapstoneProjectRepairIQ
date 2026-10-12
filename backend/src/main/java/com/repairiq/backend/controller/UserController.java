@@ -1,17 +1,24 @@
+
 package com.repairiq.backend.controller;
 
 import com.repairiq.backend.model.User;
 import com.repairiq.backend.repository.UserRepository;
 import com.repairiq.backend.service.EmailService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
-@CrossOrigin(origins = "https://repairiq-frontend.onrender.com")
+@CrossOrigin(origins = {
+        "http://127.0.0.1:5500",
+        "http://localhost:5500",
+        "https://repairiq-frontend.onrender.com"
+})
 @RequestMapping("/api/users")
 public class UserController {
 
@@ -21,8 +28,11 @@ public class UserController {
     @Autowired
     private EmailService emailService;
 
-    private final Map<String, String> otpStorage = new ConcurrentHashMap<>();
-    private final Map<String, Long> otpExpiry = new ConcurrentHashMap<>();
+    private final Map<String, String> otpStorage =
+            new ConcurrentHashMap<>();
+
+    private final Map<String, Long> otpExpiry =
+            new ConcurrentHashMap<>();
 
     private final SecureRandom random = new SecureRandom();
 
@@ -35,20 +45,29 @@ public class UserController {
     @PostMapping("/login")
     public String login(@RequestBody User user) {
 
-        User existingUser = userRepository.findByEmail(user.getEmail());
+        User existingUser =
+                userRepository.findByEmail(user.getEmail());
 
         if (existingUser == null) {
             return "User not found";
         }
 
-        if (!existingUser.getPassword().equals(user.getPassword())) {
+        if (!existingUser.getPassword()
+                .equals(user.getPassword())) {
             return "Invalid password";
         }
 
-        String otp = String.format("%06d", random.nextInt(1000000));
+        String otp = String.format(
+                "%06d",
+                random.nextInt(1_000_000)
+        );
 
         otpStorage.put(user.getEmail(), otp);
-        otpExpiry.put(user.getEmail(), System.currentTimeMillis() + 5 * 60 * 1000);
+
+        otpExpiry.put(
+                user.getEmail(),
+                System.currentTimeMillis() + 5 * 60 * 1000
+        );
 
         try {
             emailService.sendOtp(user.getEmail(), otp);
@@ -56,12 +75,18 @@ public class UserController {
         } catch (Exception e) {
             otpStorage.remove(user.getEmail());
             otpExpiry.remove(user.getEmail());
+
+            System.err.println(
+                    "OTP email error: " + e.getMessage()
+            );
+
             return "Unable to send OTP";
         }
     }
 
     @PostMapping("/verify-otp")
-    public String verifyOtp(@RequestBody Map<String, String> request) {
+    public String verifyOtp(
+            @RequestBody Map<String, String> request) {
 
         String email = request.get("email");
         String enteredOtp = request.get("otp");
@@ -94,7 +119,8 @@ public class UserController {
     }
 
     @GetMapping
-    public java.util.List<User> getUsers() {
+    public List<User> getUsers() {
         return userRepository.findAll();
     }
 }
+
